@@ -257,7 +257,7 @@ function HostLobby({ me, code }) {
     useEffect(() => {
         let ok = true;
         if (players.current.length < 3) ok = false;
-        if (players.current.filter(p => p.ready).length < players.current.length - 1) ok = false; // checks if everyone is ready
+        if (players.current.filter(p => p.ready || p.bot).length < players.current.length - 1) ok = false; // checks if everyone is ready (CPUs auto-ready)
         // if (calculatePlaysetDisabled(playset, players.current.length)) ok = false;
 
         setStartCondition((devMode ? true : ok))
@@ -274,7 +274,7 @@ function HostLobby({ me, code }) {
 
         setPlayerState(players.current)
 
-        var offlinePlayers = players?.current?.filter(p => !p?.conn && p?.id !== "HOST") || [];
+        var offlinePlayers = players?.current?.filter(p => !p?.conn && p?.id !== "HOST" && !p?.bot) || [];
         setArePlayersOffline((offlinePlayers?.length > 0));
 
 
@@ -534,6 +534,22 @@ function HostLobby({ me, code }) {
 
     }
 
+    // CPU helpers
+    function addCPU() {
+        const id = idGenAlphabet(3, [players.current.map(p => p.id)]);
+        players.current.push({ id, name: `CPU ${id}`, bot: true, ready: true });
+        setPlayersUpdated([]);
+        updateAllClients();
+    }
+
+    function removeLastCPU() {
+        const lastCpu = [...players.current].reverse().find(p => p.bot);
+        if (!lastCpu) return;
+        players.current = players.current.filter(p => p.id !== lastCpu.id);
+        setPlayersUpdated([]);
+        updateAllClients();
+    }
+
 
     return (
         <div className='flex flex-col justify-start items-center w-full pb-24'>
@@ -559,6 +575,12 @@ function HostLobby({ me, code }) {
                 }
 
 
+                {/* CPU controls */}
+                <div className='w-full grid grid-cols-2 gap-2 my-1'>
+                    <button className='btn btn-secondary' onClick={addCPU}>Add CPU</button>
+                    <button className='btn btn-accent' onClick={removeLastCPU}>Remove CPU</button>
+                </div>
+
                 <button onClick={(devMode ? promptStartGame : startGame)} className={'w-full btn  text-title' + (startCondition ? " btn-primary  " : " btn-disabled ")} >Start game</button>
                 <button className='link font-bold clickable' onClick={() => closeRoom()}>Close room</button>
 
@@ -583,7 +605,7 @@ function Lobby({ me, players = [], amHost, kickPlayer, arePlayersOffline }) { //
         <div className='w-full flex flex-col justify-start items-center'>
             <div className='bg-neutral flex items-center justify-center w-full'>
                 <div className='w-full max-w-2xl p-4 gap-4 flex flex-col justify-start items-center'>
-                    {players.map((player, i) => <PlayerRow showOnline={me?.id === "HOST"} showId={me?.id === "HOST" || player?.id === "HOST"} me={me} {...player} key={i} amHost={amHost} element={me?.id === "HOST" && !player.host &&
+                    {players.map((player, i) => <PlayerRow showOnline={me?.id === "HOST"} showId={me?.id === "HOST" || player?.id === "HOST"} me={me} {...player} key={i} amHost={amHost} element={me?.id === "HOST" && !player.host && !player.bot &&
                         <div className='grow flex justify-end items-center'><button className='clickable btn-ghost p-3 -mr-1 rounded-md skew ' onClick={() => kickPlayer(player?.id)}><IoPersonRemoveSharp /></button></div>
                     } />)}
                     {players.length < 6 && [...Array(6 - players.length)].map((e, i) => <EmptyPlayerRow key={i} />)}
@@ -605,7 +627,6 @@ function EmptyPlayerRow({ }) { // amHost is when the person looking at the scree
         </div>
     )
 }
-
 
 
 

@@ -180,7 +180,7 @@ function ClientGame({ me, setMe, code, setScreen }) {
                                 }, data?.payload?.delay || 1000)
                             } else {
                                 conn.close();
-                                redirect(data?.payload?.to)
+                                redirect(data.payload.to)
                                 peer.destroy()
                             }
 
@@ -1153,9 +1153,19 @@ function Game({ me, getPlayers = () => null, game, execute = () => { }, setScree
         if (!request) return setPrompt(null)
         const { initId, withId } = request;
         const [initPlayer, withPlayer] = [getPlayerFromId(initId), getPlayerFromId(withId)];
+        // Auto accept if target is a CPU (bot)
+        if (withPlayer?.bot && initPlayer?.id === me?.id) {
+            execute("accept-swap-card-request", [initId, withId]);
+            return;
+        }
         if (request.initId === me?.id) { // if requester
             setPrompt({ element: <SwapPropmt initPlayer={initPlayer} withPlayer={withPlayer} onCancel={() => execute("remove-swap-card-request", [initId, withId])} /> })
         } else { // if requestee
+            // Auto accept if this player (me) is a CPU
+            if (me?.bot) {
+                execute("accept-swap-card-request", [initId, withId]);
+                return;
+            }
             setMenu(null);
             setMenu2(null);
             setPrompt({ element: <SwapPropmt initPlayer={initPlayer} withPlayer={withPlayer} onAccept={() => execute("accept-swap-card-request", [initId, withId])} onCancel={() => execute("remove-swap-card-request", [initId, withId])} /> })
@@ -1258,7 +1268,7 @@ function GoToRoomScreen({ roomNr = 1, onReady = () => { }, onForceReady }) {
 function RoundStartScreen({ roundName = "FIRST" }) {
 
     return (
-        <div className='absolute inset-0 flex flex-col items-center animate-out-after-3 justify-center anim-out-after-3'>
+        <div className='absolute inset-0 flex flex-col items-center animate__animated animate__fadeInUp justify-center'>
             <div className={" h-[100vh] w-[100vh] p-22 absolute rounded-full animate-right-to-left scale-[5] -top-[50vh]  opacity-50 " + (roundName.toUpperCase() === "FIRST" ? " circular-gradient-success " : roundName.toUpperCase() === "LAST" ? " circular-gradient-primary " : " circular-gradient-sky ")}></div>
             <div className={" h-[100vh] w-[100vh] p-22 absolute rounded-full animate-left-to-right scale-[5] -bottom-[50vh] opacity-50 " + (roundName.toUpperCase() === "FIRST" ? " circular-gradient-green " : roundName.toUpperCase() === "LAST" ? " circular-gradient-wine " : " circular-gradient-secondary ")}></div>
 

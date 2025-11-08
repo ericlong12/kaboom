@@ -14,7 +14,7 @@ function PlayerList({ players = [], onClick, element, showOnline, showId, me }) 
 }
 
 
-export function PlayerRow({ name, id, onClick, element, conn, me, showId, showOnline, ready }) {
+export function PlayerRow({ name, id, onClick, element, conn, me, showId, showOnline, ready, bot }) {
 
     const avaConfig = useMemo(() => {
         return genConfig(name || id || "a");
@@ -30,6 +30,7 @@ export function PlayerRow({ name, id, onClick, element, conn, me, showId, showOn
                     {showId && <div className={'label w-fit flex items-center justify-center label-primary text-primary-content rounded-md px-2 py-1 text-xs text-normal skew ' + (id === "HOST" ? " bg-secondary " : " bg-primary ")}>{id}</div>}
                     {me && me?.id === id && <div className={'label w-fit flex items-center justify-center label-primary text-primary-content rounded-md px-2 py-1 text-xs text-normal skew bg-info '}>YOU</div>}
                     {ready && <div className='label flex items-center justify-center label-secondary bg-success text-secondary-content rounded-md px-2 py-1 text-xs text-normal skew'>READY</div>}
+                    {bot && <div className='label flex items-center justify-center bg-accent text-accent-content rounded-md px-2 py-1 text-xs text-normal skew'>CPU</div>}
                     {element}
                 </div>
             </div>
